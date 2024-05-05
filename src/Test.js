@@ -1,27 +1,46 @@
-import React, { useState } from "react";
-import questionsData from "./questions"; // Assume this is imported correctly
+import React, { useState, useEffect } from "react";
+import questionsData from "./questions";
 
 const Test = () => {
-  const [questions, setQuestions] = useState(questionsData);
-  const [answers, setAnswers] = useState({});
-  const [submitted, setSubmitted] = useState(false);
+  const [questions] = useState(questionsData);
+  const [answers, setAnswers] = useState(() => {
+    const localAnswers = localStorage.getItem("testAnswers");
+    return localAnswers ? JSON.parse(localAnswers) : {};
+  });
+  const [submitted, setSubmitted] = useState(() => {
+    const localSubmitted = localStorage.getItem("testSubmitted");
+    return localSubmitted ? JSON.parse(localSubmitted) : false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("testAnswers", JSON.stringify(answers));
+    localStorage.setItem("testSubmitted", JSON.stringify(submitted));
+  }, [answers, submitted]);
 
   const handleAnswerSelect = (questionId, choiceId) => {
-    setAnswers({ ...answers, [questionId]: choiceId });
+    setAnswers((prevAnswers) => ({ ...prevAnswers, [questionId]: choiceId }));
   };
 
   const handleSubmit = () => {
     setSubmitted(true);
   };
-
+  const handleReset = () => {
+    // Clear the answers and submitted status
+    setAnswers({});
+    setSubmitted(false);
+    // Remove stored data from localStorage
+    localStorage.removeItem("testAnswers");
+    localStorage.removeItem("testSubmitted");
+  };
   const allAnswered = questions.length === Object.keys(answers).length;
 
-  const renderChoiceButton = (question, choice, index) => {
+  const renderChoiceButton = (question, choice) => {
     const isSelected = answers[question.id] === choice.id;
     let buttonStyle = {
       margin: "5px",
       padding: "10px",
-      width: "200px",
+      width: "90%",
+      maxWidth: "300px",
       fontSize: "16px",
     };
 
@@ -55,27 +74,43 @@ const Test = () => {
   };
 
   return (
-    <div>
+    <div style={{ padding: "10px", maxWidth: "600px", margin: "auto" }}>
       {questions.map((question, index) => (
         <div key={question.id}>
           <h3>{`${index + 1}. ${question.text}`}</h3>
           {question.choices.map((choice) =>
-            renderChoiceButton(question, choice, index)
+            renderChoiceButton(question, choice)
           )}
         </div>
       ))}
       <button
         style={{
-          width: "200px",
+          width: "90%",
           height: "60px",
-          margin: "20px",
+          margin: "20px 5%",
           borderRadius: "6px",
           fontSize: "22px",
+          maxWidth: "300px",
         }}
         onClick={handleSubmit}
         disabled={!allAnswered || submitted}
       >
         Submit Test
+      </button>
+      <button
+        style={{
+          width: "90%",
+          height: "60px",
+          margin: "0px 5% 20px",
+          borderRadius: "6px",
+          fontSize: "22px",
+          maxWidth: "300px",
+          backgroundColor: "#f8d7da",
+        }}
+        onClick={handleReset}
+        disabled={!submitted}
+      >
+        Reset Test
       </button>
     </div>
   );
