@@ -11,6 +11,7 @@ const Test = () => {
     const localSubmitted = localStorage.getItem("testSubmitted");
     return localSubmitted ? JSON.parse(localSubmitted) : false;
   });
+  const [correctCount, setCorrectCount] = useState(0);
 
   useEffect(() => {
     localStorage.setItem("testAnswers", JSON.stringify(answers));
@@ -22,16 +23,21 @@ const Test = () => {
   };
 
   const handleSubmit = () => {
+    const count = questions.reduce((acc, question) => {
+      return acc + (answers[question.id] === question.correctAnswer ? 1 : 0);
+    }, 0);
+    setCorrectCount(count);
     setSubmitted(true);
   };
+
   const handleReset = () => {
-    // Clear the answers and submitted status
     setAnswers({});
     setSubmitted(false);
-    // Remove stored data from localStorage
+    setCorrectCount(0);
     localStorage.removeItem("testAnswers");
     localStorage.removeItem("testSubmitted");
   };
+
   const allAnswered = questions.length === Object.keys(answers).length;
 
   const renderChoiceButton = (question, choice) => {
@@ -97,6 +103,19 @@ const Test = () => {
       >
         Submit Test
       </button>
+      {submitted && (
+        <div
+          style={{
+            color: "green",
+            fontSize: "18px",
+            textAlign: "center",
+            margin: "20px",
+          }}
+        >
+          You answered {correctCount} out of {questions.length} questions
+          correctly!
+        </div>
+      )}
       <button
         style={{
           width: "90%",
